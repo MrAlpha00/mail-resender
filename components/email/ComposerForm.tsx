@@ -1,7 +1,6 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import type { TurnstileInstance } from "@marsidev/react-turnstile";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import {
   AlertCircle,
@@ -17,11 +16,10 @@ import {
   Sparkles,
   Users,
 } from "lucide-react";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState, type FormEvent } from "react";
 import { useForm, useWatch } from "react-hook-form";
 
 import { AttachmentUpload } from "@/components/email/AttachmentUpload";
-import { CaptchaField } from "@/components/email/CaptchaField";
 import { EmailPreview } from "@/components/email/EmailPreview";
 import { MessageEditor } from "@/components/email/MessageEditor";
 import { RecipientInput } from "@/components/email/RecipientInput";
@@ -413,9 +411,14 @@ export function ComposerForm({ config }: ComposerFormProps) {
     }
   };
 
-  const submitHandler = form.handleSubmit(performSend, () => {
-    showFormError("Check the highlighted fields before sending.");
-  });
+  const submitHandler = (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    // Build the handler inside the submit event so React Hook Form never
+    // receives a ref-reading callback during render.
+    void form.handleSubmit(performSend, () => {
+      showFormError("Check the highlighted fields before sending.");
+    })(event);
+  };
 
   const resetComposer = () => {
     form.reset({ subject: "", message: "" });

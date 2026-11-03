@@ -23,7 +23,6 @@ import {
   safeResendErrorMessage,
 } from "@/lib/security";
 import { getMaxRecipients } from "@/lib/settings";
-import { verifyTurnstile } from "@/lib/turnstile";
 import { createSendPayloadSchema, toFieldErrors } from "@/lib/validation";
 import type {
   RecipientResult,
@@ -79,8 +78,7 @@ async function mapWithConcurrency<T, R>(
 export async function POST(request: Request) {
   const requestId = crypto.randomUUID();
   const startedAt = Date.now();
-  const ip = getClientIp(request);
-  const ipHash = hashIp(ip);
+  const ipHash = hashIp(getClientIp(request));
 
   try {
     if (!isSameOrigin(request)) {
@@ -111,11 +109,11 @@ export async function POST(request: Request) {
 
     const resend = getResendClient();
     const sender = getSender();
-    if (!resend || !sender) {
+    if (!resend) {
       logEvent("not_configured", { requestId, ipHash, status: 503 });
       return jsonError(
         "not_configured",
-        "Email delivery is not configured yet. Add the Resend environment variables and redeploy.",
+        "Email delivery is not configured yet. Add RESEND_API_KEY and redeploy.",
         503,
         requestId,
       );
@@ -157,7 +155,6 @@ export async function POST(request: Request) {
 
     const selectedTemplate = String(form.get("selectedTemplate") ?? "");
     const submissionId = String(form.get("submissionId") ?? "");
-    const turnstileToken = String(form.get("turnstileToken") ?? "");
 
     const parsed = createSendPayloadSchema(getMaxRecipients()).safeParse({
       recipients: recipientsRaw,
@@ -165,7 +162,6 @@ export async function POST(request: Request) {
       message: String(form.get("message") ?? ""),
       selectedTemplate,
       submissionId,
-      turnstileToken,
     });
 
     if (!parsed.success) {
@@ -177,17 +173,6 @@ export async function POST(request: Request) {
 
     const payload = parsed.data;
     const recipients = [...new Set(payload.recipients)];
-
-    const captcha = await verifyTurnstile(payload.turnstileToken, ip);
-    if (!captcha.ok) {
-      logEvent("captcha_failed", { requestId, ipHash, status: 403, reason: "verification" });
-      return jsonError(
-        captcha.configurationError ? "not_configured" : "captcha_failed",
-        captcha.message ?? "Bot-protection verification failed.",
-        captcha.configurationError ? 503 : 403,
-        requestId,
-      );
-    }
 
     const files = form
       .getAll("attachments")

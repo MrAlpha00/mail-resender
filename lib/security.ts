@@ -64,6 +64,14 @@ export function safeResendErrorMessage(error: unknown): string {
   if (combined.includes("idempotency")) {
     return "This copy was already submitted. Duplicate delivery was prevented.";
   }
+  if (
+    combined.includes("only send testing emails") ||
+    combined.includes("testing emails to your own") ||
+    combined.includes("verify a domain") ||
+    combined.includes("onboarding@resend.dev")
+  ) {
+    return "Resend is in test mode and only accepts the email address associated with the Resend account. Verify a custom sending domain before sending to external recipients.";
+  }
   if (combined.includes("rate") && combined.includes("limit")) {
     return "The email provider is receiving too many requests. Try again shortly.";
   }

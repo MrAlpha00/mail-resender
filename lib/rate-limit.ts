@@ -23,6 +23,18 @@ interface MemoryBucket {
 const memoryBuckets = new Map<string, MemoryBucket>();
 const memoryQuota = new Map<string, number>();
 
+const RESERVE_RECIPIENTS_SCRIPT = `
+local current = redis.call("INCRBY", KEYS[1], ARGV[1])
+if current > tonumber(ARGV[2]) then
+  redis.call("DECRBY", KEYS[1], ARGV[1])
+  return -1
+end
+if current == tonumber(ARGV[1]) then
+  redis.call("EXPIRE", KEYS[1], ARGV[3])
+end
+return current
+`;
+
 let redis: Redis | null | undefined;
 let shortLimiter: Ratelimit | null = null;
 let longLimiter: Ratelimit | null = null;
@@ -159,12 +171,16 @@ export async function reserveRecipientQuota(
 
   if (store) {
     try {
-      const next = await store.incr(key);
-      if (next === 1) {
-        await store.expire(key, 60 * 60 * 48);
-      }
-      if (next > limit) {
-        await store.decr(key);
+      // Atomically reserve the real number of recipient copies. The script
+      // rolls the increment back when the daily ceiling would be exceeded.
+      const next = Number(
+        await store.eval(
+          RESERVE_RECIPIENTS_SCRIPT,
+          [key],
+          [String(recipientCount), String(limit), String(60 * 60 * 48)],
+        ),
+      );
+      if (next < 0) {
         return {
           ok: false,
           reason: "quota_exceeded",

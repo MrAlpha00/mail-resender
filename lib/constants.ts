@@ -11,9 +11,20 @@
 export const MAX_RECIPIENTS_DEFAULT = 15;
 export const MAX_RECIPIENTS_HARD_LIMIT = 50;
 
-export const MAX_FILE_COUNT = 5;
-export const MAX_FILE_SIZE_BYTES = 3 * 1024 * 1024; // 3 MB per file
-export const MAX_TOTAL_ATTACHMENT_BYTES = 3.5 * 1024 * 1024; // 3.5 MB total
+/**
+ * Temporary Resend onboarding sender. Resend only permits delivery to the
+ * email address associated with the Resend account until a custom sending
+ * domain is verified.
+ */
+export const RESEND_TEST_SENDER = {
+  name: "MailDrop",
+  email: "onboarding@resend.dev",
+  from: "MailDrop <onboarding@resend.dev>",
+} as const;
+
+export const MAX_FILE_COUNT = 10;
+export const MAX_FILE_SIZE_BYTES = 4 * 1024 * 1024; // 4 MB per file
+export const MAX_TOTAL_ATTACHMENT_BYTES = 4 * 1024 * 1024; // 4 MB total
 export const MAX_REQUEST_BYTES = 4.4 * 1024 * 1024; // includes multipart overhead
 
 export const MAX_SUBJECT_LENGTH = 150;

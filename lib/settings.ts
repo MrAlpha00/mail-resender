@@ -1,8 +1,8 @@
 import {
   MAX_RECIPIENTS_DEFAULT,
   MAX_RECIPIENTS_HARD_LIMIT,
+  RESEND_TEST_SENDER,
 } from "@/lib/constants";
-import { resolveSenderEmail, sanitizeSenderName } from "@/lib/security";
 import type { ComposerConfig } from "@/types/email";
 
 function clampInteger(value: string | undefined, fallback: number, min: number, max: number): number {
@@ -39,28 +39,19 @@ export function getAppUrl(): string {
   return "http://localhost:3000";
 }
 
-export function getSenderConfig(): { name: string; email: string; from: string } | null {
-  const email = resolveSenderEmail(process.env.RESEND_FROM_EMAIL);
-  if (!email) return null;
-  const name = sanitizeSenderName(process.env.RESEND_FROM_NAME || "MailDrop") || "MailDrop";
-  return { name, email, from: `${name} <${email}>` };
+export function getSenderConfig(): { name: string; email: string; from: string } {
+  return RESEND_TEST_SENDER;
 }
 
 export function getComposerConfig(): ComposerConfig {
-  const sender = getSenderConfig();
-  const turnstileSiteKey = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY?.trim() ?? "";
-  const secretConfigured = Boolean(process.env.TURNSTILE_SECRET_KEY?.trim());
   const apiKeyConfigured = Boolean(process.env.RESEND_API_KEY?.trim());
 
   return {
-    fromName:
-      sender?.name ??
-      (sanitizeSenderName(process.env.RESEND_FROM_NAME || "MailDrop") || "MailDrop"),
-    fromEmail: sender?.email ?? "Not configured",
+    fromName: RESEND_TEST_SENDER.name,
+    fromEmail: RESEND_TEST_SENDER.email,
     maxRecipients: getMaxRecipients(),
-    turnstileSiteKey,
-    turnstileRequired: secretConfigured || process.env.NODE_ENV === "production",
-    deliveryConfigured: Boolean(sender && apiKeyConfigured),
+    deliveryConfigured: apiKeyConfigured,
+    resendTestMode: true,
     appUrl: getAppUrl(),
   };
 }

@@ -81,7 +81,6 @@ export function createSendPayloadSchema(maxRecipients: number) {
     message: composerTextSchema.shape.message,
     selectedTemplate: templateIdSchema,
     submissionId: z.uuid("The submission identifier is invalid."),
-    turnstileToken: z.string().max(4096, "The verification token is invalid.").optional().default(""),
   });
 }
 

@@ -89,9 +89,9 @@ export interface ComposerConfig {
   fromName: string;
   fromEmail: string;
   maxRecipients: number;
-  turnstileSiteKey: string;
-  turnstileRequired: boolean;
   deliveryConfigured: boolean;
+  /** True while the fixed Resend test sender is in use. */
+  resendTestMode: boolean;
   appUrl: string;
 }
 
