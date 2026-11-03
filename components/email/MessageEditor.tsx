@@ -157,6 +157,7 @@ export function MessageEditor({ control, disabled = false, onDirty }: MessageEdi
           }}
           disabled={disabled}
           rows={12}
+          maxLength={MAX_MESSAGE_LENGTH}
           placeholder="Write your message here..."
           aria-invalid={Boolean(error)}
           aria-describedby={error ? "message-error" : "message-help"}

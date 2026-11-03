@@ -18,7 +18,7 @@ import {
   Users,
 } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { useForm } from "react-hook-form";
+import { useForm, useWatch } from "react-hook-form";
 
 import { AttachmentUpload } from "@/components/email/AttachmentUpload";
 import { CaptchaField } from "@/components/email/CaptchaField";
@@ -156,8 +156,8 @@ export function ComposerForm({ config }: ComposerFormProps) {
   const errorRef = useRef<HTMLDivElement>(null);
   const reduceMotion = useReducedMotion();
 
-  const subjectValue = form.watch("subject") ?? "";
-  const messageValue = form.watch("message") ?? "";
+  const subjectValue = useWatch({ control: form.control, name: "subject" }) ?? "";
+  const messageValue = useWatch({ control: form.control, name: "message" }) ?? "";
   const isSending = sendState === "sending";
 
   const subjectValid = subjectValue.trim().length > 0 && subjectValue.length <= MAX_SUBJECT_LENGTH;
