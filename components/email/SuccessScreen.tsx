@@ -14,7 +14,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 
-import { Button, buttonStyles } from "@/components/ui/Button";
+import { Button } from "@/components/ui/Button";
 import type { SendEmailSuccessResponse } from "@/types/email";
 import { cn } from "@/lib/utils";
 

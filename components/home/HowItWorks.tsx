@@ -1,4 +1,4 @@
-import { AtSign, ArrowRight, Eye, PenLine, Send } from "lucide-react";
+import { AtSign, ArrowRight, Eye, PenLine } from "lucide-react";
 import Link from "next/link";
 
 import { Reveal } from "@/components/motion/Reveal";

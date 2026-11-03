@@ -1,6 +1,7 @@
 "use client";
 
 import { AlertTriangle, RotateCcw } from "lucide-react";
+import Link from "next/link";
 
 import { Button, buttonStyles } from "@/components/ui/Button";
 
@@ -21,9 +22,9 @@ export default function GlobalError({ reset }: { error: Error & { digest?: strin
           <RotateCcw className="size-4" />
           Try again
         </Button>
-        <a href="/" className={buttonStyles({ variant: "secondary", size: "md" })}>
+        <Link href="/" className={buttonStyles({ variant: "secondary", size: "md" })}>
           Back to home
-        </a>
+        </Link>
       </div>
     </div>
   );

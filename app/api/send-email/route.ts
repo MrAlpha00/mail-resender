@@ -23,7 +23,7 @@ import {
   safeResendErrorMessage,
 } from "@/lib/security";
 import { getMaxRecipients } from "@/lib/settings";
-import { TURNSTILE_ACTION, verifyTurnstile } from "@/lib/turnstile";
+import { verifyTurnstile } from "@/lib/turnstile";
 import { createSendPayloadSchema, toFieldErrors } from "@/lib/validation";
 import type {
   RecipientResult,

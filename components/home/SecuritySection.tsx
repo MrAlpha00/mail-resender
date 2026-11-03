@@ -102,7 +102,7 @@ export function SecuritySection() {
 
                   <div className="mt-5 space-y-2.5">
                     {["Recipient one", "Recipient two", "Recipient three"].map(
-                      (label, index) => (
+                      (label) => (
                         <div
                           key={label}
                           className="flex items-center justify-between rounded-xl border border-white/10 bg-[#101d3a] px-3.5 py-3"
