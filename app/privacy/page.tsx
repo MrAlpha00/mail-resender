@@ -42,6 +42,12 @@ export default function PrivacyPage() {
         address to use the composer.
       </p>
       <p>
+        This deployment currently uses Resend&apos;s test sender,
+        <strong> MailDrop &lt;onboarding@resend.dev&gt;</strong>. Resend test mode only permits
+        delivery to the email address associated with the Resend account until a custom sending
+        domain is verified.
+      </p>
+      <p>
         This notice describes the default behavior of the MailDrop application. The person or
         organization operating this deployment (the &ldquo;site operator&rdquo;) is responsible
         for the deployment and for any additional policies they publish.
@@ -69,8 +75,8 @@ export default function PrivacyPage() {
           metadata to deliver and secure the message.
         </li>
         <li>
-          <strong>Abuse-prevention signals</strong>, including a one-time Cloudflare Turnstile
-          token, short-lived rate-limit counters, and a one-way hash of your IP address used for
+          <strong>Abuse-prevention signals</strong>, including short-lived rate-limit counters,
+          daily recipient quota counters, and a one-way hash of your IP address used for
           monitoring and rate limiting.
         </li>
       </ul>
@@ -97,7 +103,7 @@ export default function PrivacyPage() {
       <ul>
         <li>To render and preview the email you are composing at your request.</li>
         <li>To submit individual copies to the email provider for your recipients.</li>
-        <li>To verify CAPTCHA tokens and enforce rate and recipient limits.</li>
+        <li>To enforce rate, quota, and recipient limits.</li>
         <li>To detect abuse, protect the sending domain, and diagnose operational failures.</li>
         <li>To comply with legal obligations and enforce the acceptable-use policy.</li>
       </ul>
@@ -116,10 +122,6 @@ export default function PrivacyPage() {
           <strong>Resend</strong> — delivery of the email, attachment processing, and delivery
           event records. Resend may retain email metadata and content according to its account
           configuration and policies.
-        </li>
-        <li>
-          <strong>Cloudflare Turnstile</strong> — bot-protection challenges and verification
-          tokens.
         </li>
         <li>
           <strong>Upstash Redis</strong> — short-lived rate-limit counters and a global daily
@@ -162,9 +164,8 @@ export default function PrivacyPage() {
       <h2 id="cookies">Cookies and local storage</h2>
       <p>
         MailDrop does not use advertising cookies, cross-site tracking pixels, or account session
-        cookies. Cloudflare Turnstile may set necessary challenge-related cookies or use local
-        storage to distinguish automated traffic from people. The composer keeps your draft in
-        browser memory only; it is not saved to local storage by MailDrop.
+        cookies. The composer keeps your draft in browser memory only; it is not saved to local
+        storage by MailDrop.
       </p>
 
       <h2 id="security">Security</h2>
@@ -172,8 +173,8 @@ export default function PrivacyPage() {
         Sending happens exclusively on the server. The Resend API key is never exposed to the
         browser, and the From address is fixed by the site operator. The application uses
         server-side validation, HTML escaping, header-injection protection, attachment type and
-        signature checks, CAPTCHA verification, and rate limiting. Transport between your browser
-        and the application is encrypted when served over HTTPS.
+        signature checks, rate limiting, and a daily recipient quota. Transport between your
+        browser and the application is encrypted when served over HTTPS.
       </p>
       <p>
         No system is completely secure. Do not send sensitive information such as passwords,

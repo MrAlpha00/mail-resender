@@ -29,6 +29,7 @@ import { TemplateSelector } from "@/components/email/TemplateSelector";
 import { Button } from "@/components/ui/Button";
 import { validateAttachment, isImageFilename } from "@/lib/attachments";
 import {
+  MAX_FILE_COUNT,
   MAX_MESSAGE_LENGTH,
   MAX_SUBJECT_LENGTH,
 } from "@/lib/constants";
@@ -322,20 +323,8 @@ export function ComposerForm({ config }: ComposerFormProps) {
 
       if (!config.deliveryConfigured) {
         showFormError(
-          "Email delivery is not configured. Add the Resend sender and API key environment variables, then redeploy.",
+          "Email delivery is not configured. Add RESEND_API_KEY to the environment and redeploy.",
         );
-        return;
-      }
-
-      if (config.turnstileRequired && !config.turnstileSiteKey) {
-        showFormError(
-          "Bot protection is required but the Turnstile site key is missing. Update the environment configuration.",
-        );
-        return;
-      }
-
-      if (config.turnstileSiteKey && !captchaToken) {
-        showFormError("Complete the bot-protection check before sending.");
         return;
       }
 
@@ -349,7 +338,6 @@ export function ComposerForm({ config }: ComposerFormProps) {
       body.append("message", values.message);
       body.append("selectedTemplate", template);
       body.append("submissionId", submissionId);
-      body.append("turnstileToken", captchaToken);
       for (const attachment of attachments) {
         body.append("attachments", attachment.file, attachment.file.name);
       }
@@ -397,7 +385,6 @@ export function ComposerForm({ config }: ComposerFormProps) {
       submittingRef.current = false;
       if (attempted) {
         setUploadProgress(0);
-        resetCaptcha();
       }
     }
   };
@@ -424,7 +411,6 @@ export function ComposerForm({ config }: ComposerFormProps) {
     setAttachmentError(null);
     setUploadProgress(0);
     setSubmissionId(crypto.randomUUID());
-    resetCaptcha();
     requestAnimationFrame(() => {
       composerTopRef.current?.scrollIntoView({
         behavior: reduceMotion ? "auto" : "smooth",
@@ -445,7 +431,6 @@ export function ComposerForm({ config }: ComposerFormProps) {
     setFormError(null);
     setAttachmentError(null);
     setSubmissionId(crypto.randomUUID());
-    resetCaptcha();
     requestAnimationFrame(() => {
       composerTopRef.current?.scrollIntoView({
         behavior: reduceMotion ? "auto" : "smooth",
@@ -472,11 +457,20 @@ export function ComposerForm({ config }: ComposerFormProps) {
             <p className="mt-0.5 text-amber-800/90">
               You can compose and preview, but the send button stays disabled until{" "}
               <code className="rounded bg-amber-100 px-1 py-0.5 text-[10.5px]">RESEND_API_KEY</code>{" "}
-              and{" "}
-              <code className="rounded bg-amber-100 px-1 py-0.5 text-[10.5px]">
-                RESEND_FROM_EMAIL
-              </code>{" "}
-              are set.
+              is set.
+            </p>
+          </div>
+        </div>
+      )}
+
+      {config.resendTestMode && (
+        <div className="mb-4 flex items-start gap-2.5 rounded-xl border border-sky-200 bg-sky-50 px-4 py-3 text-[12px] leading-5 text-sky-900">
+          <Info className="mt-0.5 size-4 shrink-0" />
+          <div>
+            <p className="font-semibold">Resend test mode is active.</p>
+            <p className="mt-0.5 text-sky-800/90">
+              Resend currently accepts only the email address associated with its account. Other
+              recipients will be rejected until a custom sending domain is verified.
             </p>
           </div>
         </div>
@@ -639,6 +633,10 @@ export function ComposerForm({ config }: ComposerFormProps) {
                   <p className="mt-0.5 text-[9.5px] text-slate-400">
                     Set by MailDrop · cannot be changed
                   </p>
+                  <span className="mt-1.5 inline-flex items-center gap-1 rounded-full border border-amber-200 bg-amber-50 px-1.5 py-0.5 text-[8.5px] font-semibold uppercase tracking-[0.08em] text-amber-700">
+                    <Info className="size-2.5" />
+                    Resend Test Mode
+                  </span>
                 </div>
               </div>
             </div>
@@ -652,7 +650,7 @@ export function ComposerForm({ config }: ComposerFormProps) {
                 <h2 className="text-[12px] font-semibold text-navy">Ready to send</h2>
                 <span className="inline-flex items-center gap-1 text-[9.5px] font-medium text-slate-400">
                   <Sparkles className="size-3" />
-                  {Math.round(([recipientsValid, subjectValid, messageValid, captchaReady, config.deliveryConfigured].filter(Boolean).length / 5) * 100)}%
+                  {Math.round((readinessComplete / 3) * 100)}%
                 </span>
               </div>
 
@@ -672,24 +670,10 @@ export function ComposerForm({ config }: ComposerFormProps) {
                   detail={subjectValid && messageValid ? "Ready to format" : "Both are required"}
                 />
                 <ReadinessRow
-                  done={captchaReady}
-                  warning={config.turnstileRequired && !config.turnstileSiteKey}
-                  label="Bot protection"
-                  detail={
-                    config.turnstileRequired
-                      ? config.turnstileSiteKey
-                        ? captchaReady
-                          ? "Verified"
-                          : "Complete the check below"
-                        : "Server key missing"
-                      : "Skipped in local development"
-                  }
-                />
-                <ReadinessRow
                   done={config.deliveryConfigured}
                   warning={!config.deliveryConfigured}
                   label="Delivery configured"
-                  detail={config.deliveryConfigured ? "Verified sender ready" : "Admin setup required"}
+                  detail={config.deliveryConfigured ? "Resend API key ready" : "RESEND_API_KEY missing"}
                 />
                 <ReadinessRow
                   done
@@ -697,29 +681,10 @@ export function ComposerForm({ config }: ComposerFormProps) {
                   detail={
                     attachments.length > 0
                       ? `${attachments.length} file${attachments.length === 1 ? "" : "s"} · ${(totalAttachmentBytes / 1024 / 1024).toFixed(1)} MB`
-                      : "Optional · up to 5 files"
+                      : `Optional · up to ${MAX_FILE_COUNT} files`
                   }
                 />
               </ul>
-
-              <div className="mt-4">
-                <CaptchaField
-                  siteKey={config.turnstileSiteKey}
-                  required={config.turnstileRequired}
-                  captchaRef={captchaRef}
-                  onToken={(token) => {
-                    setCaptchaToken(token);
-                    if (token) setCaptchaError(null);
-                  }}
-                  onError={() => setCaptchaError("The bot-protection widget failed to load. Refresh and try again.")}
-                  disabled={isSending}
-                />
-                {captchaError && (
-                  <p role="alert" className="mt-1.5 text-[10.5px] font-medium text-red-600">
-                    {captchaError}
-                  </p>
-                )}
-              </div>
 
               <div className="mt-4">
                 <SendButton

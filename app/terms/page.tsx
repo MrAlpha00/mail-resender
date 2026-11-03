@@ -76,7 +76,7 @@ export default function TermsPage() {
         <li>Content that infringes intellectual property, privacy, or other rights.</li>
         <li>Impersonation of a person, company, brand, or domain you do not represent.</li>
         <li>Attempts to probe, overload, bypass, or reverse-engineer the service or its security controls.</li>
-        <li>Automated submission through bots, scripts, or circumvention of CAPTCHA, rate limits, or recipient limits.</li>
+        <li>Automated submission through bots, scripts, or circumvention of rate limits, quotas, or recipient limits.</li>
         <li>Any use that would violate the sending domain&apos;s provider policies or applicable law.</li>
       </ul>
       <p>
@@ -108,6 +108,11 @@ export default function TermsPage() {
       </p>
 
       <h2 id="delivery">Delivery is not guaranteed</h2>
+      <p>
+        This deployment currently uses Resend&apos;s test sender. Resend only accepts the email
+        address associated with the Resend account until a custom sending domain is verified.
+        Other recipients will be rejected; MailDrop reports those rejections as failures.
+      </p>
       <p>
         A successful submission means the email provider accepted the request for delivery. It
         does not mean the message reached an inbox. Delivery can be delayed, filtered, bounced,

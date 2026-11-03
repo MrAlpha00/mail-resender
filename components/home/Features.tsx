@@ -45,7 +45,7 @@ const features = [
     icon: ShieldCheck,
     title: "Secure Delivery",
     description:
-      "Messages are delivered through Resend from a verified sender controlled by the site owner.",
+      "Messages are delivered through Resend from a fixed, server-controlled sender. The From address cannot be changed in the browser.",
     tint: "bg-sky-50 text-sky-600",
   },
   {
@@ -60,7 +60,7 @@ const features = [
 const strip = [
   { icon: Send, label: "Resend-powered delivery" },
   { icon: FileText, label: "Plain-text alternative included" },
-  { icon: ShieldCheck, label: "CAPTCHA & rate limits" },
+  { icon: ShieldCheck, label: "Rate limits & daily quotas" },
 ];
 
 export function Features() {

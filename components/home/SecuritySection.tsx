@@ -32,9 +32,9 @@ const assurances = [
   },
   {
     icon: Server,
-    title: "A verified sender you control",
+    title: "A fixed, server-side sender",
     description:
-      "The From address comes from a domain verified by the site owner in Resend.",
+      "The From address is set on the server and cannot be changed by visitors in the browser.",
   },
 ];
 
@@ -53,8 +53,8 @@ export function SecuritySection() {
               </h2>
               <p className="mt-4 max-w-xl text-[14.5px] leading-7 text-slate-500">
                 Group email shouldn&apos;t expose your contacts. MailDrop uses
-                individual delivery by default, with server-side validation and
-                bot protection on every submission.
+                individual delivery by default, with server-side validation, rate
+                limits, and a daily recipient quota on every submission.
               </p>
 
               <div className="mt-8 grid gap-5 sm:grid-cols-2">
