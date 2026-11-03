@@ -478,6 +478,7 @@ export function ComposerForm({ config }: ComposerFormProps) {
 
       <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_348px] lg:items-start">
         <form
+          id="compose-form"
           noValidate
           onSubmit={submitHandler}
           aria-busy={isSending}

@@ -10,6 +10,8 @@ interface SendButtonProps {
   isSending?: boolean;
   uploadProgress?: number;
   label?: string;
+  /** Associates the button with a form when it is rendered outside that form. */
+  formId?: string;
 }
 
 export function SendButton({
@@ -17,11 +19,13 @@ export function SendButton({
   isSending = false,
   uploadProgress = 0,
   label = "Send Email",
+  formId,
 }: SendButtonProps) {
   return (
     <div>
       <button
         type="submit"
+        form={formId}
         disabled={disabled || isSending}
         className={cn(
           "group relative inline-flex h-12 w-full items-center justify-center gap-2.5 overflow-hidden rounded-xl bg-navy px-6 text-[14px] font-semibold text-white shadow-[0_14px_30px_-16px_rgba(23,37,84,0.9)] transition-all duration-200",
