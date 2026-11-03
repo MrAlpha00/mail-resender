@@ -1,0 +1,40 @@
+{
+  "name": "maildrop",
+  "version": "1.0.0",
+  "private": true,
+  "description": "MailDrop — a premium multi-recipient email composer powered by Resend.",
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "eslint .",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@hookform/resolvers": "7.0.2",
+    "@marsidev/react-turnstile": "1.6.3",
+    "@upstash/ratelimit": "2.2.0",
+    "@upstash/redis": "1.41.0",
+    "framer-motion": "14.9.0",
+    "lucide-react": "1.67.0",
+    "next": "16.4.4",
+    "react": "19.3.1",
+    "react-dom": "19.3.1",
+    "react-hook-form": "7.91.0",
+    "resend": "6.37.0",
+    "zod": "4.6.7"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "4.3.4",
+    "@types/node": "24.19.2",
+    "@types/react": "19.3.0",
+    "@types/react-dom": "19.3.0",
+    "eslint": "9.39.5",
+    "eslint-config-next": "16.4.4",
+    "tailwindcss": "4.3.4",
+    "typescript": "5.9.3"
+  },
+  "engines": {
+    "node": ">=20.9.0"
+  }
+}
