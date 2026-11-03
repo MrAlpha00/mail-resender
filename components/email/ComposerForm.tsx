@@ -143,12 +143,9 @@ export function ComposerForm({ config }: ComposerFormProps) {
   const [result, setResult] = useState<SendEmailSuccessResponse | null>(null);
   const [formError, setFormError] = useState<string | null>(null);
   const [uploadProgress, setUploadProgress] = useState(0);
-  const [captchaToken, setCaptchaToken] = useState("");
-  const [captchaError, setCaptchaError] = useState<string | null>(null);
   const [submissionId, setSubmissionId] = useState(() => crypto.randomUUID());
 
   const submittingRef = useRef(false);
-  const captchaRef = useRef<TurnstileInstance | null>(null);
   const previewUrlsRef = useRef<Set<string>>(new Set());
   const composerTopRef = useRef<HTMLDivElement>(null);
   const errorRef = useRef<HTMLDivElement>(null);
@@ -161,12 +158,11 @@ export function ComposerForm({ config }: ComposerFormProps) {
   const subjectValid = subjectValue.trim().length > 0 && subjectValue.length <= MAX_SUBJECT_LENGTH;
   const messageValid = messageValue.trim().length > 0 && messageValue.length <= MAX_MESSAGE_LENGTH;
   const recipientsValid = recipients.length > 0 && recipients.length <= config.maxRecipients;
-  const captchaReady = config.turnstileSiteKey
-    ? Boolean(captchaToken)
-    : !config.turnstileRequired;
   const readyToSend =
-    recipientsValid && subjectValid && messageValid && captchaReady && config.deliveryConfigured;
+    recipientsValid && subjectValid && messageValid && config.deliveryConfigured;
   const totalAttachmentBytes = attachments.reduce((sum, item) => sum + item.file.size, 0);
+  const readinessComplete = [recipientsValid, subjectValid && messageValid, config.deliveryConfigured]
+    .filter(Boolean).length;
 
   useEffect(() => {
     const urls = previewUrlsRef.current;
@@ -263,11 +259,6 @@ export function ComposerForm({ config }: ComposerFormProps) {
     });
     setAttachmentError(null);
   }, []);
-
-  const resetCaptcha = () => {
-    setCaptchaToken("");
-    captchaRef.current?.reset();
-  };
 
   const showFormError = (message: string) => {
     setFormError(message);
