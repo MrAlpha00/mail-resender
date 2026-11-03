@@ -53,7 +53,9 @@ export function getComposerConfig(): ComposerConfig {
   const apiKeyConfigured = Boolean(process.env.RESEND_API_KEY?.trim());
 
   return {
-    fromName: sender?.name ?? sanitizeSenderName(process.env.RESEND_FROM_NAME || "MailDrop") || "MailDrop",
+    fromName:
+      sender?.name ??
+      (sanitizeSenderName(process.env.RESEND_FROM_NAME || "MailDrop") || "MailDrop"),
     fromEmail: sender?.email ?? "Not configured",
     maxRecipients: getMaxRecipients(),
     turnstileSiteKey,
