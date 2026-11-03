@@ -67,6 +67,8 @@ export function safeResendErrorMessage(error: unknown): string {
   if (
     combined.includes("only send testing emails") ||
     combined.includes("testing emails to your own") ||
+    combined.includes("testing email address") ||
+    combined.includes("use our testing email") ||
     combined.includes("verify a domain") ||
     combined.includes("onboarding@resend.dev")
   ) {
