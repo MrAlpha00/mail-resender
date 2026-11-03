@@ -689,6 +689,7 @@ export function ComposerForm({ config }: ComposerFormProps) {
 
               <div className="mt-4">
                 <SendButton
+                  formId="compose-form"
                   disabled={!readyToSend}
                   isSending={isSending}
                   uploadProgress={uploadProgress}
