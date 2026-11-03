@@ -130,7 +130,7 @@ export async function POST(request: Request) {
       return jsonError(
         rateLimit.unavailable ? "not_configured" : "rate_limited",
         rateLimit.unavailable
-          ? "The rate-limiting store is unavailable. Please try again later."
+          ? "Sending is temporarily unavailable because the Upstash Redis rate-limiting store is not configured or reachable. Add UPSTASH_REDIS_REST_URL and UPSTASH_REDIS_REST_TOKEN, then redeploy."
           : "Too many send attempts. Please wait before trying again.",
         rateLimit.unavailable ? 503 : 429,
         requestId,
