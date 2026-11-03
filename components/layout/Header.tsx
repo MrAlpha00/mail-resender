@@ -23,17 +23,14 @@ function isActive(pathname: string, href: string): boolean {
 
 export function Header() {
   const pathname = usePathname();
-  const [open, setOpen] = useState(false);
+  const [openForPath, setOpenForPath] = useState<string | null>(null);
+  const open = openForPath === pathname;
   const reduceMotion = useReducedMotion();
-
-  useEffect(() => {
-    setOpen(false);
-  }, [pathname]);
 
   useEffect(() => {
     if (!open) return;
     const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape") setOpen(false);
+      if (event.key === "Escape") setOpenForPath(null);
     };
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
@@ -85,7 +82,7 @@ export function Header() {
         <button
           type="button"
           className="grid size-10 place-items-center rounded-full border border-slate-200 bg-white text-navy transition-colors hover:bg-slate-50 md:hidden"
-          onClick={() => setOpen((value) => !value)}
+          onClick={() => setOpenForPath(open ? null : pathname)}
           aria-expanded={open}
           aria-controls="mobile-navigation"
           aria-label={open ? "Close navigation" : "Open navigation"}
@@ -111,6 +108,7 @@ export function Header() {
                   <Link
                     key={item.href}
                     href={item.href}
+                    onClick={() => setOpenForPath(null)}
                     aria-current={active ? "page" : undefined}
                     className={cn(
                       "flex items-center justify-between rounded-xl px-3.5 py-3 text-[15px] font-medium transition-colors",
@@ -126,6 +124,7 @@ export function Header() {
               })}
               <Link
                 href="/compose"
+                onClick={() => setOpenForPath(null)}
                 className="mt-2 inline-flex h-12 items-center justify-center gap-2 rounded-xl bg-navy px-4 text-[15px] font-semibold text-white"
               >
                 Compose an email
