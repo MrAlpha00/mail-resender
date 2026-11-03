@@ -221,7 +221,7 @@ export async function POST(request: Request) {
       return jsonError(
         quota.unavailable ? "not_configured" : "rate_limited",
         quota.unavailable
-          ? "The delivery quota store is unavailable. Please try again later."
+          ? "Sending is temporarily unavailable because the Upstash Redis quota store is not configured or reachable. Add UPSTASH_REDIS_REST_URL and UPSTASH_REDIS_REST_TOKEN, then redeploy."
           : "The shared daily sending limit has been reached. Please try again tomorrow.",
         quota.unavailable ? 503 : 429,
         requestId,
