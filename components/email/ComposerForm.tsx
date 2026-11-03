@@ -320,47 +320,51 @@ export function ComposerForm({ config }: ComposerFormProps) {
   };
 
   const performSend = async (values: ComposerTextValues) => {
+    // Set the guard before any await so a rapid double-click cannot start two
+    // submissions.
     if (submittingRef.current) return;
-    setFormError(null);
-
-    const valid = await validateBeforeAction();
-    if (!valid) return;
-
-    if (!config.deliveryConfigured) {
-      showFormError(
-        "Email delivery is not configured. Add the Resend sender and API key environment variables, then redeploy.",
-      );
-      return;
-    }
-
-    if (config.turnstileRequired && !config.turnstileSiteKey) {
-      showFormError(
-        "Bot protection is required but the Turnstile site key is missing. Update the environment configuration.",
-      );
-      return;
-    }
-
-    if (config.turnstileSiteKey && !captchaToken) {
-      showFormError("Complete the bot-protection check before sending.");
-      return;
-    }
-
     submittingRef.current = true;
-    setSendState("sending");
-    setUploadProgress(0);
-
-    const body = new FormData();
-    body.append("recipients", JSON.stringify(recipients));
-    body.append("subject", values.subject);
-    body.append("message", values.message);
-    body.append("selectedTemplate", template);
-    body.append("submissionId", submissionId);
-    body.append("turnstileToken", captchaToken);
-    for (const attachment of attachments) {
-      body.append("attachments", attachment.file, attachment.file.name);
-    }
+    setFormError(null);
+    let attempted = false;
 
     try {
+      const valid = await validateBeforeAction();
+      if (!valid) return;
+
+      if (!config.deliveryConfigured) {
+        showFormError(
+          "Email delivery is not configured. Add the Resend sender and API key environment variables, then redeploy.",
+        );
+        return;
+      }
+
+      if (config.turnstileRequired && !config.turnstileSiteKey) {
+        showFormError(
+          "Bot protection is required but the Turnstile site key is missing. Update the environment configuration.",
+        );
+        return;
+      }
+
+      if (config.turnstileSiteKey && !captchaToken) {
+        showFormError("Complete the bot-protection check before sending.");
+        return;
+      }
+
+      attempted = true;
+      setSendState("sending");
+      setUploadProgress(0);
+
+      const body = new FormData();
+      body.append("recipients", JSON.stringify(recipients));
+      body.append("subject", values.subject);
+      body.append("message", values.message);
+      body.append("selectedTemplate", template);
+      body.append("submissionId", submissionId);
+      body.append("turnstileToken", captchaToken);
+      for (const attachment of attachments) {
+        body.append("attachments", attachment.file, attachment.file.name);
+      }
+
       const response = await postEmail(body, setUploadProgress);
 
       if (!response.data) {
@@ -402,8 +406,10 @@ export function ComposerForm({ config }: ComposerFormProps) {
       );
     } finally {
       submittingRef.current = false;
-      setUploadProgress(0);
-      resetCaptcha();
+      if (attempted) {
+        setUploadProgress(0);
+        resetCaptcha();
+      }
     }
   };
 
