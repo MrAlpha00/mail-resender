@@ -242,7 +242,7 @@ function renderAttachments(attachments: AttachmentMeta[], palette: Palette): str
         </td>
         <td valign="middle" style="padding:10px 0;">
           <p style="margin:0;font-size:14px;line-height:1.4;font-weight:600;color:${palette.title};word-break:break-word;">${escapeHtml(attachment.filename)}</p>
-          <p style="margin:2px 0 0 0;font-size:12px;line-height:1.4;color:${palette.muted};">${formatBytes(attachment.size)} · Attached file</p>
+          <p style="margin:2px 0 0 0;font-size:12px;line-height:1.4;color:${palette.muted};">${formatBytes(attachment.size)} · ${attachmentTypeName(attachment.filename)}</p>
         </td>
       </tr>`;
     })
