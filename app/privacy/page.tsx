@@ -28,7 +28,7 @@ export default function PrivacyPage() {
       eyebrow="Privacy notice"
       title="Privacy, without the fine-print games."
       description="MailDrop is designed to send a message without collecting a personal mailbox, building a contact database, or keeping your files around. Here is exactly what happens when you use it."
-      updated="3 November 2026"
+      updated="6 November 2026"
       toc={toc}
     >
       <h2 id="overview">Overview</h2>
