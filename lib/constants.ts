@@ -12,14 +12,14 @@ export const MAX_RECIPIENTS_DEFAULT = 15;
 export const MAX_RECIPIENTS_HARD_LIMIT = 50;
 
 /**
- * Temporary Resend onboarding sender. Resend only permits delivery to the
- * email address associated with the Resend account until a custom sending
- * domain is verified.
+ * Fixed production sender. The domain must be verified in Resend before live
+ * delivery is accepted. This value is server-controlled and is never exposed
+ * as an editable sender field in the browser.
  */
-export const RESEND_TEST_SENDER = {
+export const MAILDROP_SENDER = {
   name: "MailDrop",
-  email: "onboarding@resend.dev",
-  from: "MailDrop <onboarding@resend.dev>",
+  email: "no-reply@maildrops.online",
+  from: "MailDrop <no-reply@maildrops.online>",
 } as const;
 
 export const MAX_FILE_COUNT = 10;
