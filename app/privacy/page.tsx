@@ -90,9 +90,9 @@ export default function PrivacyPage() {
         Attachments are validated in the browser and again on the server. Files are uploaded
         directly from your browser to a private Vercel Blob store, held only long enough to build
         and submit the email, and deleted after the send attempt completes. Any upload abandoned
-        before sending is removed by a scheduled cleanup after one hour. MailDrop does not write
-        uploaded files to a database or the application filesystem, and it does not create public
-        attachment links.
+        before sending is removed by a scheduled cleanup once it is more than one hour old.
+        MailDrop does not write uploaded files to a database or the application filesystem, and it
+        does not create public attachment links.
       </p>
       <p>
         The email provider processes the attachment content in order to deliver the message. The
@@ -146,9 +146,10 @@ export default function PrivacyPage() {
         <li>
           <strong>Message content, recipient lists, and attachments:</strong> message content and
           recipient lists are not retained by the MailDrop application after the request
-          completes. Temporary attachment blobs are deleted after the send attempt, or within one
-          hour if an upload is abandoned. Content may be visible in the email provider&apos;s
-          delivery records subject to the provider&apos;s settings.
+          completes. Temporary attachment blobs are deleted after the send attempt, or by
+          scheduled cleanup once an abandoned upload is more than one hour old. Content may be
+          visible in the email provider&apos;s delivery records subject to the provider&apos;s
+          settings.
         </li>
         <li>
           <strong>Rate-limit and quota counters:</strong> short windows of 10 minutes to 24 hours,

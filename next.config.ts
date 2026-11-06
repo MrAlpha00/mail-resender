@@ -8,7 +8,7 @@ const contentSecurityPolicy = [
   "style-src 'self' 'unsafe-inline'",
   "img-src 'self' blob: data:",
   "font-src 'self' data:",
-  `connect-src 'self' https://challenges.cloudflare.com${isDev ? " ws: wss:" : ""}`,
+  `connect-src 'self' https://challenges.cloudflare.com https://vercel.com https://blob.vercel-storage.com https://*.blob.vercel-storage.com https://*.private.blob.vercel-storage.com${isDev ? " ws: wss:" : ""}`,
   "frame-src https://challenges.cloudflare.com",
   "media-src 'self' blob:",
   "object-src 'none'",

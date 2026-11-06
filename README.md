@@ -174,7 +174,7 @@ Attachment bytes are uploaded directly from the browser to a **private** Vercel 
 
 Never expose `BLOB_READ_WRITE_TOKEN` or `CRON_SECRET` to the browser. The browser only receives short-lived, path-scoped upload tokens issued by `/api/blob/upload`.
 
-Uploaded blobs use the path format `maildrop/<submission-id>/<file-id>`. The server only accepts pathnames that match the submitted ID and a strict UUID. Blobs are deleted after the send attempt. A daily cleanup job removes anything still under `maildrop/` after one hour.
+Uploaded blobs use the path format `maildrop/<submission-id>/<file-id>`. The server only accepts pathnames that match the submitted ID and a strict UUID. Blobs are deleted after the send attempt. A daily cleanup job deletes anything still under `maildrop/` that is more than one hour old at the time it runs.
 
 ---
 
@@ -210,7 +210,7 @@ Resend's 40 MB limit applies to the whole email after attachments are Base64 enc
 
 Approved attachments: JPG, JPEG, PNG, WEBP, GIF, PDF, DOC, DOCX, XLS, XLSX, PPT, PPTX, TXT, CSV, RTF, ODT, ODS, ODP.
 
-Files are stored only in the private Blob store for the short period between upload and send. They are deleted after the send attempt, and a scheduled cleanup removes abandoned uploads after one hour.
+Files are stored only in the private Blob store for the short period between upload and send. They are deleted after the send attempt, and a scheduled cleanup removes abandoned uploads older than one hour at its next run.
 
 ---
 
@@ -264,7 +264,7 @@ Validation or security failure (HTTP `400`, `403`, `413`, `415`, `429`, `500`, o
 
 ## Security and privacy model
 
-- **Server-only secret.** `RESEND_API_KEY` is never sent to the browser.
+- **Server-only secrets.** `RESEND_API_KEY`, `BLOB_READ_WRITE_TOKEN`, and `CRON_SECRET` are never sent to the browser.
 - **Fixed sender.** `MailDrop <no-reply@maildrops.online>` is hardcoded in `lib/constants.ts`. User input cannot alter the `From` header.
 - **No raw HTML.** The message is escaped first, then a small safe syntax (`**bold**`, `_italic_`, bullet/numbered lists, blank lines) is converted into the email HTML.
 - **No content logging.** Recipient addresses, subjects, message bodies, filenames, and attachment bytes are never written to logs. Only request IDs, hashed IPs, counts, statuses, durations, and coarse reasons are logged.
@@ -272,7 +272,7 @@ Validation or security failure (HTTP `400`, `403`, `413`, `415`, `429`, `500`, o
 - **Abuse controls.** Per-IP send and upload limits plus a global daily recipient ceiling protect the Resend account and the Blob store.
 - **Attachment safety.** Extension allowlist, MIME checks, size limits, filename sanitization, and magic-byte signature verification. Attachment pathnames are scoped to the submission ID and validated as UUIDs.
 - **Private temporary storage.** Vercel Blob is configured with private access. Browsers never receive the store token or a public attachment URL; the server downloads files with its own token.
-- **Temporary retention.** Blobs are deleted after the send attempt, and `/api/blob/cleanup` removes abandoned uploads after one hour. That route requires `CRON_SECRET`.
+- **Temporary retention.** Blobs are deleted after the send attempt, and `/api/blob/cleanup` deletes abandoned uploads older than one hour at its next run. That route requires `CRON_SECRET`.
 - **No delivery overclaiming.** Results reflect Resend responses only. Failures are shown per recipient.
 - **Duplicate protection.** The submit guard runs before the first `await`, and Resend idempotency keys use the client-generated submission ID and recipient index.
 - **No CAPTCHA dependency.** Turnstile code is retained but inactive, and no Cloudflare keys are required.
@@ -285,7 +285,7 @@ If you operate MailDrop publicly, review `/terms` and `/privacy`, and adapt them
 - User-supplied `From` addresses or personal SMTP credentials.
 - Arbitrary HTML, tracking pixels, open/click analytics, or scheduled campaigns.
 - Contact lists, unsubscribe management, or CRM features.
-- Long-term file storage. Attachments live in a private temporary Blob store and are deleted after sending or after one hour if abandoned.
+- Long-term file storage. Attachments live in a private temporary Blob store and are deleted after sending, or by scheduled cleanup once an abandoned upload is more than one hour old.
 
 ---
 

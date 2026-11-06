@@ -124,7 +124,7 @@ export async function POST(request: Request) {
       logEvent("request_too_large", { requestId, ipHash, status: 413 });
       return jsonError(
         "payload_too_large",
-        "This request is too large. Reduce the attachment size and try again.",
+        "This request is too large. Refresh the page and try again.",
         413,
         requestId,
       );
@@ -304,10 +304,12 @@ export async function POST(request: Request) {
         }
 
         const filename = sanitizeFilename(attachment.filename);
+        const metadataContentType =
+          metadata.contentType.split(";")[0]?.trim().toLowerCase() || metadata.contentType;
         const validation = validateAttachment({
           name: filename,
           size: metadata.size,
-          type: metadata.contentType,
+          type: metadataContentType,
         });
 
         if (!validation.ok || !validation.spec || !validation.extension) {
@@ -334,7 +336,7 @@ export async function POST(request: Request) {
         if (totalEncodedAttachmentBytes > MAX_RESEND_ATTACHMENT_BYTES) {
           return jsonError(
             "payload_too_large",
-            `The encoded email would exceed Resend's ${formatBytes(RESEND_MAX_EMAIL_BYTES)} limit. Images are included twice for inline preview, so remove a file or use a smaller one.`,
+            `These attachments are too large to send safely within Resend's ${formatBytes(RESEND_MAX_EMAIL_BYTES)} encoded email limit. Images are included twice for inline preview, so remove a file or use a smaller one.`,
             413,
             requestId,
           );

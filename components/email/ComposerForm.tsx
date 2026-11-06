@@ -234,7 +234,7 @@ export function ComposerForm({ config }: ComposerFormProps) {
       const encodedFileBytes = estimateAttachmentPayloadBytes(file.size, isImage);
       if (encodedBytes + encodedFileBytes > MAX_RESEND_ATTACHMENT_BYTES) {
         errors.push(
-          "These attachments would exceed Resend's 40 MB encoded email limit. Remove a file or choose a smaller one.",
+          "These attachments are too large to send safely within Resend's 40 MB encoded email limit. Remove a file or choose a smaller one.",
         );
         continue;
       }
