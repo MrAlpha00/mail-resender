@@ -76,7 +76,7 @@ Optional settings:
 | `MAX_RECIPIENTS` | `15` | Maximum recipients per submission, clamped to 1–50. |
 | `GLOBAL_DAILY_RECIPIENT_LIMIT` | `500` | Daily recipient-copy ceiling across all visitors, clamped to 1–100,000. |
 | `ABUSE_HASH_SALT` | Development fallback | Salt used when hashing IP addresses in abuse-monitoring logs. Set a private value in production. |
-| `NEXT_PUBLIC_APP_URL` | `http://localhost:3000` | Public site origin used in email footers, e.g. `https://mail-resender.vercel.app`. |
+| `NEXT_PUBLIC_APP_URL` | `http://localhost:3000` | Public site origin used in email footers, e.g. `https://maildrops.online`. |
 
 There are no sender-email or Turnstile variables in the active configuration.
 
