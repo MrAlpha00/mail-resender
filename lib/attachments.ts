@@ -186,33 +186,3 @@ export interface PreparedAttachment {
   isImage: boolean;
   bytes: Uint8Array;
 }
-
-/**
- * Server-side attachment processing. Files stay in memory only for the life of
- * the request and are discarded as soon as the email request completes.
- */
-export async function prepareAttachment(file: File): Promise<PreparedAttachment> {
-  const validation = validateAttachment(file);
-  if (!validation.ok || !validation.spec || !validation.extension) {
-    throw new AttachmentError(validation.error ?? "This attachment is not allowed.");
-  }
-
-  const bytes = new Uint8Array(await file.arrayBuffer());
-
-  if (!verifyFileSignature(bytes, validation.extension)) {
-    throw new AttachmentError(
-      `“${sanitizeFilename(file.name)}” does not match its file type. Please upload the original file.`,
-    );
-  }
-
-  return {
-    filename: sanitizeFilename(file.name),
-    size: file.size,
-    contentType: validation.spec.mimes[0] ?? "application/octet-stream",
-    extension: validation.extension,
-    isImage: validation.spec.kind === "image",
-    bytes,
-  };
-}
-
-export class AttachmentError extends Error {}
