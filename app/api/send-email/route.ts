@@ -553,5 +553,13 @@ export async function POST(request: Request) {
       500,
       requestId,
     );
+  } finally {
+    if (blobToken && blobPathnames.length > 0) {
+      try {
+        await del(blobPathnames, { token: blobToken });
+      } catch {
+        console.warn("[maildrop:attachments] Temporary blob cleanup failed.");
+      }
+    }
   }
 }
