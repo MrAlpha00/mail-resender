@@ -39,9 +39,10 @@ export const RESEND_MAX_EMAIL_BYTES = 40 * 1024 * 1024;
 
 /**
  * Keep a small margin below Resend's 40 MB ceiling for the HTML/text body and
- * MIME metadata. The limit is applied to the encoded attachment payload.
+ * MIME metadata. Use decimal megabytes so the guard is conservative even if
+ * the provider measures the encoded payload in decimal units.
  */
-export const MAX_RESEND_ATTACHMENT_BYTES = 39 * 1024 * 1024;
+export const MAX_RESEND_ATTACHMENT_BYTES = 39 * 1000 * 1000;
 
 export const MAX_SUBJECT_LENGTH = 150;
 export const MAX_MESSAGE_LENGTH = 10_000;
