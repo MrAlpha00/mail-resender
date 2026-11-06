@@ -351,7 +351,7 @@ export async function POST(request: Request) {
       }
 
       for (const attachment of pending) {
-        let result: GetBlobResult;
+        let result: GetBlobResult | null;
         try {
           result = await get(attachment.pathname, {
             access: "private",

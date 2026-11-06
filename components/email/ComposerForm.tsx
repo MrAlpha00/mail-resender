@@ -48,6 +48,7 @@ import type {
   LocalAttachment,
   SendEmailResponse,
   SendEmailSuccessResponse,
+  UploadedAttachmentMeta,
 } from "@/types/email";
 
 interface ComposerFormProps {
@@ -351,15 +352,28 @@ export function ComposerForm({ config }: ComposerFormProps) {
       setSendState("sending");
       setUploadProgress(0);
 
+      let uploadedAttachments: UploadedAttachmentMeta[];
+      try {
+        uploadedAttachments = await uploadAttachments(
+          submissionId,
+          attachments,
+          setUploadProgress,
+        );
+      } catch {
+        setSendState("idle");
+        showFormError(
+          "One or more attachments could not be uploaded securely. Check your connection, remove the file, and try again.",
+        );
+        return;
+      }
+
       const body = new FormData();
       body.append("recipients", JSON.stringify(recipients));
       body.append("subject", values.subject);
       body.append("message", values.message);
       body.append("selectedTemplate", template);
       body.append("submissionId", submissionId);
-      for (const attachment of attachments) {
-        body.append("attachments", attachment.file, attachment.file.name);
-      }
+      body.append("attachments", JSON.stringify(uploadedAttachments));
 
       const response = await postEmail(body, setUploadProgress);
 
@@ -701,8 +715,8 @@ export function ComposerForm({ config }: ComposerFormProps) {
               <div className="mt-4 flex items-start gap-2 rounded-xl border border-slate-200 bg-slate-50/70 px-3 py-2.5 text-[10px] leading-4 text-slate-500">
                 <Info className="mt-0.5 size-3.5 shrink-0 text-slate-400" />
                 <span>
-                  Your message content and files are not stored by MailDrop. The provider and
-                  infrastructure process delivery metadata.
+                  Attachments are held in private temporary storage only while sending and are
+                  removed afterward, or automatically if abandoned.
                 </span>
               </div>
             </div>
