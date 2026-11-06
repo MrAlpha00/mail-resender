@@ -87,8 +87,10 @@ export default function TermsPage() {
       <h2 id="attachments">Attachments</h2>
       <p>
         Only explicitly approved image and document file types may be attached. Executable,
-        script, macro-enabled, and other blocked file types are rejected. Files are validated for
-        size, type, and basic file signature, and are held in memory only for the sending request.
+        script, macro-enabled, and other blocked file types are rejected. Files are checked for
+        count, size, type, and basic file signature. Attachment bytes are uploaded directly from
+        your browser to a private temporary storage service, are not publicly accessible, and are
+        deleted after the send attempt or after one hour if the upload is abandoned.
       </p>
       <p>
         You are responsible for ensuring you have the right to share every file you attach. Do not
@@ -134,8 +136,9 @@ export default function TermsPage() {
       </p>
       <p>
         MailDrop does not claim ownership of your message. The application does not retain message
-        content or attachments after the request, though the email provider may retain delivery
-        records as described in the privacy notice.
+        content after the request, and temporary attachment storage is deleted after the send
+        attempt or after one hour if abandoned. The email provider may retain delivery records as
+        described in the privacy notice.
       </p>
 
       <h2 id="security">Security</h2>

@@ -87,9 +87,12 @@ export default function PrivacyPage() {
 
       <h2 id="attachments">Attachments</h2>
       <p>
-        Attachments are validated on the server, held in memory only for the lifetime of the
-        sending request, and discarded after the provider request completes. MailDrop does not
-        write uploaded files to a database, object store, or the application filesystem.
+        Attachments are validated in the browser and again on the server. Files are uploaded
+        directly from your browser to a private Vercel Blob store, held only long enough to build
+        and submit the email, and deleted after the send attempt completes. Any upload abandoned
+        before sending is removed by a scheduled cleanup after one hour. MailDrop does not write
+        uploaded files to a database or the application filesystem, and it does not create public
+        attachment links.
       </p>
       <p>
         The email provider processes the attachment content in order to deliver the message. The
@@ -128,9 +131,9 @@ export default function PrivacyPage() {
           content.
         </li>
         <li>
-          <strong>Vercel</strong> — application hosting, serverless execution, and operational
-          logs. Application logs deliberately omit message content, recipient addresses, and
-          attachment contents.
+          <strong>Vercel</strong> — application hosting, serverless execution, private Blob storage
+          for temporary attachment uploads, and operational logs. Application logs deliberately
+          omit message content, recipient addresses, filenames, and attachment contents.
         </li>
       </ul>
       <p>
@@ -141,9 +144,11 @@ export default function PrivacyPage() {
       <h2 id="retention">Retention</h2>
       <ul>
         <li>
-          <strong>Message content, recipient lists, and attachments:</strong> not retained by the
-          MailDrop application after the request completes. They may be visible in the email
-          provider&apos;s delivery records subject to the provider&apos;s settings.
+          <strong>Message content, recipient lists, and attachments:</strong> message content and
+          recipient lists are not retained by the MailDrop application after the request
+          completes. Temporary attachment blobs are deleted after the send attempt, or within one
+          hour if an upload is abandoned. Content may be visible in the email provider&apos;s
+          delivery records subject to the provider&apos;s settings.
         </li>
         <li>
           <strong>Rate-limit and quota counters:</strong> short windows of 10 minutes to 24 hours,
@@ -172,8 +177,10 @@ export default function PrivacyPage() {
         Sending happens exclusively on the server. The Resend API key is never exposed to the
         browser, and the From address is fixed by the site operator. The application uses
         server-side validation, HTML escaping, header-injection protection, attachment type and
-        signature checks, rate limiting, and a daily recipient quota. Transport between your
-        browser and the application is encrypted when served over HTTPS.
+        signature checks, rate limiting, and a daily recipient quota. Attachment uploads use
+        short-lived, path-scoped tokens for a private Blob store; the store credentials are never
+        sent to the browser. Transport between your browser and the application is encrypted when
+        served over HTTPS.
       </p>
       <p>
         No system is completely secure. Do not send sensitive information such as passwords,
