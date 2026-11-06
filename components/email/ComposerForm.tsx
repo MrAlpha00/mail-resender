@@ -27,10 +27,16 @@ import { SendButton } from "@/components/email/SendButton";
 import { SuccessScreen } from "@/components/email/SuccessScreen";
 import { TemplateSelector } from "@/components/email/TemplateSelector";
 import { Button } from "@/components/ui/Button";
-import { validateAttachment, isImageFilename } from "@/lib/attachments";
+import {
+  estimateAttachmentPayloadBytes,
+  isImageFilename,
+  validateAttachment,
+} from "@/lib/attachments";
+import { uploadAttachments } from "@/lib/blob-upload";
 import {
   MAX_FILE_COUNT,
   MAX_MESSAGE_LENGTH,
+  MAX_RESEND_ATTACHMENT_BYTES,
   MAX_SUBJECT_LENGTH,
 } from "@/lib/constants";
 import { composerTextSchema } from "@/lib/validation";
@@ -207,6 +213,10 @@ export function ComposerForm({ config }: ComposerFormProps) {
     const errors: string[] = [];
     let count = attachments.length;
     let totalBytes = totalAttachmentBytes;
+    let encodedBytes = attachments.reduce(
+      (sum, item) => sum + estimateAttachmentPayloadBytes(item.file.size, item.isImage),
+      0,
+    );
 
     for (const file of files) {
       const validation = validateAttachment(file, {
@@ -220,6 +230,14 @@ export function ComposerForm({ config }: ComposerFormProps) {
       }
 
       const isImage = validation.spec?.kind === "image" || isImageFilename(file.name);
+      const encodedFileBytes = estimateAttachmentPayloadBytes(file.size, isImage);
+      if (encodedBytes + encodedFileBytes > MAX_RESEND_ATTACHMENT_BYTES) {
+        errors.push(
+          "These attachments would exceed Resend's 40 MB encoded email limit. Remove a file or choose a smaller one.",
+        );
+        continue;
+      }
+
       let previewUrl: string | null = null;
       if (isImage) {
         previewUrl = URL.createObjectURL(file);
@@ -234,6 +252,7 @@ export function ComposerForm({ config }: ComposerFormProps) {
       });
       count += 1;
       totalBytes += file.size;
+      encodedBytes += encodedFileBytes;
     }
 
     if (accepted.length > 0) {

@@ -1,4 +1,4 @@
-import { del, get, head } from "@vercel/blob";
+import { del, get, head, type GetBlobResult } from "@vercel/blob";
 import { NextResponse } from "next/server";
 
 import {
@@ -351,7 +351,7 @@ export async function POST(request: Request) {
       }
 
       for (const attachment of pending) {
-        let result;
+        let result: GetBlobResult;
         try {
           result = await get(attachment.pathname, {
             access: "private",
