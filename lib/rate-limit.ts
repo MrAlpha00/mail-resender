@@ -175,6 +175,60 @@ export async function enforceRateLimit(ipHash: string): Promise<RateLimitResult>
   return memoryRateLimit(`long:${ipHash}`, RATE_LIMIT_LONG_MAX, 24 * 60 * 60 * 1000);
 }
 
+/**
+ * Per-IP protection for direct attachment uploads. This is intentionally
+ * separate from the send limiter because one submission can upload many files.
+ */
+export async function enforceUploadRateLimit(ipHash: string): Promise<RateLimitResult> {
+  const limiters = getUploadLimiters();
+
+  if (limiters) {
+    try {
+      const [shortResult, longResult] = await Promise.all([
+        limiters.short.limit(ipHash),
+        limiters.long.limit(ipHash),
+      ]);
+
+      if (!shortResult.success) {
+        return {
+          ok: false,
+          reason: "rate_limited",
+          retryAfter: Math.max(1, Math.ceil((shortResult.reset - Date.now()) / 1000)),
+        };
+      }
+
+      if (!longResult.success) {
+        return {
+          ok: false,
+          reason: "rate_limited",
+          retryAfter: Math.max(1, Math.ceil((longResult.reset - Date.now()) / 1000)),
+        };
+      }
+
+      return { ok: true };
+    } catch {
+      console.warn("[maildrop:security] Upload rate-limit store unavailable.");
+      return { ok: false, reason: "unavailable", unavailable: true, retryAfter: 60 };
+    }
+  }
+
+  if (process.env.NODE_ENV === "production") {
+    return { ok: false, reason: "unavailable", unavailable: true, retryAfter: 60 };
+  }
+
+  const short = memoryRateLimit(
+    `upload:short:${ipHash}`,
+    UPLOAD_RATE_LIMIT_SHORT_MAX,
+    10 * 60 * 1000,
+  );
+  if (!short.ok) return short;
+  return memoryRateLimit(
+    `upload:long:${ipHash}`,
+    UPLOAD_RATE_LIMIT_LONG_MAX,
+    24 * 60 * 60 * 1000,
+  );
+}
+
 function secondsUntilUtcMidnight(): number {
   const now = new Date();
   const midnight = Date.UTC(
