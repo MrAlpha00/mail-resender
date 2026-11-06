@@ -1,7 +1,7 @@
 import {
   MAX_RECIPIENTS_DEFAULT,
   MAX_RECIPIENTS_HARD_LIMIT,
-  RESEND_TEST_SENDER,
+  MAILDROP_SENDER,
 } from "@/lib/constants";
 import type { ComposerConfig } from "@/types/email";
 
