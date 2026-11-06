@@ -90,8 +90,6 @@ export interface ComposerConfig {
   fromEmail: string;
   maxRecipients: number;
   deliveryConfigured: boolean;
-  /** True while the fixed Resend test sender is in use. */
-  resendTestMode: boolean;
   appUrl: string;
 }
 

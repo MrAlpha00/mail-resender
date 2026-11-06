@@ -229,14 +229,25 @@ export async function POST(request: Request) {
       );
     }
 
-    const attachmentsForProvider = prepared.map((attachment, index) => ({
-      filename: attachment.filename,
-      content: Buffer.from(attachment.bytes).toString("base64"),
-      contentType: attachment.contentType,
-      ...(attachment.isImage
-        ? { contentId: `maildrop-${requestId.slice(0, 8)}-${index}` }
-        : {}),
-    }));
+    const attachmentsForProvider = prepared.flatMap((attachment, index) => {
+      const downloadable = {
+        filename: attachment.filename,
+        content: Buffer.from(attachment.bytes).toString("base64"),
+        contentType: attachment.contentType,
+      };
+
+      if (!attachment.isImage) return [downloadable];
+
+      // Images are sent twice: one CID part for the inline preview and one
+      // regular attachment so every client exposes a native download.
+      return [
+        {
+          ...downloadable,
+          contentId: `maildrop-${requestId.slice(0, 8)}-${index}`,
+        },
+        downloadable,
+      ];
+    });
 
     const attachmentsForTemplate = prepared.map((attachment, index) => ({
       filename: attachment.filename,

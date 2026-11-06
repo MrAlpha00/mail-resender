@@ -40,18 +40,17 @@ export function getAppUrl(): string {
 }
 
 export function getSenderConfig(): { name: string; email: string; from: string } {
-  return RESEND_TEST_SENDER;
+  return MAILDROP_SENDER;
 }
 
 export function getComposerConfig(): ComposerConfig {
   const apiKeyConfigured = Boolean(process.env.RESEND_API_KEY?.trim());
 
   return {
-    fromName: RESEND_TEST_SENDER.name,
-    fromEmail: RESEND_TEST_SENDER.email,
+    fromName: MAILDROP_SENDER.name,
+    fromEmail: MAILDROP_SENDER.email,
     maxRecipients: getMaxRecipients(),
     deliveryConfigured: apiKeyConfigured,
-    resendTestMode: true,
     appUrl: getAppUrl(),
   };
 }

@@ -191,6 +191,16 @@ function attachmentBadge(filename: string): { label: string; color: string; back
   return { label: "FILE", color: "#475569", background: "#f1f5f9" };
 }
 
+function attachmentTypeName(filename: string): string {
+  const extension = filename.split(".").pop()?.toLowerCase() ?? "";
+  if (["jpg", "jpeg", "png", "webp", "gif"].includes(extension)) return "Image";
+  if (extension === "pdf") return "PDF document";
+  if (["doc", "docx", "odt", "rtf", "txt"].includes(extension)) return "Document";
+  if (["xls", "xlsx", "csv", "ods"].includes(extension)) return "Spreadsheet";
+  if (["ppt", "pptx", "odp"].includes(extension)) return "Presentation";
+  return "File";
+}
+
 function attachmentSrc(attachment: AttachmentMeta): string | null {
   if (attachment.previewUrl) return attachment.previewUrl;
   if (attachment.contentId) return `cid:${attachment.contentId}`;

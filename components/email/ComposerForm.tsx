@@ -463,19 +463,6 @@ export function ComposerForm({ config }: ComposerFormProps) {
         </div>
       )}
 
-      {config.resendTestMode && (
-        <div className="mb-4 flex items-start gap-2.5 rounded-xl border border-sky-200 bg-sky-50 px-4 py-3 text-[12px] leading-5 text-sky-900">
-          <Info className="mt-0.5 size-4 shrink-0" />
-          <div>
-            <p className="font-semibold">Resend test mode is active.</p>
-            <p className="mt-0.5 text-sky-800/90">
-              Resend currently accepts only the email address associated with its account. Other
-              recipients will be rejected until a custom sending domain is verified.
-            </p>
-          </div>
-        </div>
-      )}
-
       <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_348px] lg:items-start">
         <form
           id="compose-form"
@@ -634,10 +621,6 @@ export function ComposerForm({ config }: ComposerFormProps) {
                   <p className="mt-0.5 text-[9.5px] text-slate-400">
                     Set by MailDrop · cannot be changed
                   </p>
-                  <span className="mt-1.5 inline-flex items-center gap-1 rounded-full border border-amber-200 bg-amber-50 px-1.5 py-0.5 text-[8.5px] font-semibold uppercase tracking-[0.08em] text-amber-700">
-                    <Info className="size-2.5" />
-                    Resend Test Mode
-                  </span>
                 </div>
               </div>
             </div>

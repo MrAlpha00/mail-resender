@@ -65,14 +65,13 @@ export function safeResendErrorMessage(error: unknown): string {
     return "This copy was already submitted. Duplicate delivery was prevented.";
   }
   if (
-    combined.includes("only send testing emails") ||
-    combined.includes("testing emails to your own") ||
-    combined.includes("testing email address") ||
-    combined.includes("use our testing email") ||
-    combined.includes("verify a domain") ||
-    combined.includes("onboarding@resend.dev")
+    combined.includes("domain") &&
+    (combined.includes("not verified") ||
+      combined.includes("unverified") ||
+      combined.includes("verification") ||
+      combined.includes("verify"))
   ) {
-    return "Resend is in test mode and only accepts the email address associated with the Resend account. Verify a custom sending domain before sending to external recipients.";
+    return "The MailDrop sending domain is not verified in Resend. Verify the DNS records for maildrops.online in the Resend dashboard, then try again.";
   }
   if (combined.includes("rate") && combined.includes("limit")) {
     return "The email provider is receiving too many requests. Try again shortly.";
@@ -80,8 +79,7 @@ export function safeResendErrorMessage(error: unknown): string {
   if (
     combined.includes("api key") ||
     combined.includes("unauthorized") ||
-    combined.includes("forbidden") ||
-    combined.includes("domain")
+    combined.includes("forbidden")
   ) {
     return "Email delivery is not configured correctly. Please contact the site owner.";
   }
