@@ -356,7 +356,7 @@ export async function POST(request: Request) {
         let result: GetBlobResult | null;
         try {
           result = await get(attachment.pathname, {
-            access: "private",
+            access: "public",
             token: blobToken,
             useCache: false,
           });

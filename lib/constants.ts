@@ -5,7 +5,7 @@
  * are authoritative; the client mirrors them for friendly validation.
  *
  * Vercel Functions enforce a 4.5 MB request body limit. Attachment bytes are
- * uploaded directly from the browser to a private Vercel Blob store, so only
+ * uploaded directly from the browser to a Vercel Blob store, so only
  * small attachment metadata crosses the function body limit.
  *
  * Resend allows up to 40 MB per email after attachments are Base64 encoded.

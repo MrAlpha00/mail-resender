@@ -4,8 +4,8 @@ import { getAttachmentSpec } from "@/lib/attachments";
 import type { LocalAttachment, UploadedAttachmentMeta } from "@/types/email";
 
 /**
- * Upload attachments directly from the browser to the private Vercel Blob
- * store. Only pathname and filename metadata is sent to /api/send-email.
+ * Upload attachments directly from the browser to the Vercel Blob store.
+ * Only pathname and filename metadata is sent to /api/send-email.
  */
 export async function uploadAttachments(
   submissionId: string,
@@ -25,7 +25,7 @@ export async function uploadAttachments(
     const pathname = `maildrop/${submissionId}/${crypto.randomUUID()}`;
 
     const blob = await upload(pathname, file, {
-      access: "private",
+      access: "public",
       handleUploadUrl: "/api/blob/upload",
       contentType,
       clientPayload: JSON.stringify({

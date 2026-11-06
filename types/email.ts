@@ -105,7 +105,7 @@ export interface LocalAttachment {
   isImage: boolean;
 }
 
-/** Metadata-only reference to a temporary private Blob upload. */
+/** Metadata-only reference to a temporary Blob upload. */
 export interface UploadedAttachmentMeta {
   pathname: string;
   filename: string;
