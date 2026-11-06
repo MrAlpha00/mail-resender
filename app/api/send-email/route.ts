@@ -1,13 +1,20 @@
+import { del, get, head } from "@vercel/blob";
 import { NextResponse } from "next/server";
 
 import {
-  AttachmentError,
-  prepareAttachment,
+  estimateAttachmentPayloadBytes,
+  sanitizeFilename,
+  validateAttachment,
+  verifyFileSignature,
+  type PreparedAttachment,
 } from "@/lib/attachments";
 import {
+  BLOB_UPLOAD_TTL_MS,
   MAX_FILE_COUNT,
   MAX_REQUEST_BYTES,
+  MAX_RESEND_ATTACHMENT_BYTES,
   MAX_TOTAL_ATTACHMENT_BYTES,
+  RESEND_MAX_EMAIL_BYTES,
 } from "@/lib/constants";
 import { renderEmail } from "@/lib/email-templates";
 import {
@@ -23,11 +30,13 @@ import {
   safeResendErrorMessage,
 } from "@/lib/security";
 import { getMaxRecipients } from "@/lib/settings";
+import { formatBytes } from "@/lib/utils";
 import { createSendPayloadSchema, toFieldErrors } from "@/lib/validation";
 import type {
   RecipientResult,
   SendEmailErrorResponse,
   SendEmailSuccessResponse,
+  UploadedAttachmentMeta,
 } from "@/types/email";
 
 export const runtime = "nodejs";
