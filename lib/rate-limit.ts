@@ -6,6 +6,10 @@ import {
   RATE_LIMIT_LONG_WINDOW,
   RATE_LIMIT_SHORT_MAX,
   RATE_LIMIT_SHORT_WINDOW,
+  UPLOAD_RATE_LIMIT_LONG_MAX,
+  UPLOAD_RATE_LIMIT_LONG_WINDOW,
+  UPLOAD_RATE_LIMIT_SHORT_MAX,
+  UPLOAD_RATE_LIMIT_SHORT_WINDOW,
 } from "@/lib/constants";
 import { getGlobalDailyRecipientLimit } from "@/lib/settings";
 
@@ -38,6 +42,8 @@ return current
 let redis: Redis | null | undefined;
 let shortLimiter: Ratelimit | null = null;
 let longLimiter: Ratelimit | null = null;
+let uploadShortLimiter: Ratelimit | null = null;
+let uploadLongLimiter: Ratelimit | null = null;
 
 function getRedis(): Redis | null {
   const url = process.env.UPSTASH_REDIS_REST_URL?.trim();
@@ -67,6 +73,32 @@ function getLimiters(): { short: Ratelimit; long: Ratelimit } | null {
     });
   }
   return { short: shortLimiter, long: longLimiter };
+}
+
+function getUploadLimiters(): { short: Ratelimit; long: Ratelimit } | null {
+  const store = getRedis();
+  if (!store) return null;
+  if (!uploadShortLimiter || !uploadLongLimiter) {
+    uploadShortLimiter = new Ratelimit({
+      redis: store,
+      limiter: Ratelimit.slidingWindow(
+        UPLOAD_RATE_LIMIT_SHORT_MAX,
+        UPLOAD_RATE_LIMIT_SHORT_WINDOW,
+      ),
+      prefix: "maildrop:rl:upload:short",
+      analytics: false,
+    });
+    uploadLongLimiter = new Ratelimit({
+      redis: store,
+      limiter: Ratelimit.slidingWindow(
+        UPLOAD_RATE_LIMIT_LONG_MAX,
+        UPLOAD_RATE_LIMIT_LONG_WINDOW,
+      ),
+      prefix: "maildrop:rl:upload:long",
+      analytics: false,
+    });
+  }
+  return { short: uploadShortLimiter, long: uploadLongLimiter };
 }
 
 function memoryRateLimit(key: string, max: number, windowMs: number): RateLimitResult {

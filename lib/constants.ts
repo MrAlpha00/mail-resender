@@ -4,9 +4,13 @@
  * These values are used by both the browser and the server. Server-side values
  * are authoritative; the client mirrors them for friendly validation.
  *
- * Vercel Functions enforce a 4.5 MB request body limit. MailDrop keeps the
- * total attachment budget below that ceiling while remaining far under
- * Resend's 40 MB per-email attachment limit.
+ * Vercel Functions enforce a 4.5 MB request body limit. Attachment bytes are
+ * uploaded directly from the browser to a private Vercel Blob store, so only
+ * small attachment metadata crosses the function body limit.
+ *
+ * Resend allows up to 40 MB per email after attachments are Base64 encoded.
+ * Inline images are duplicated (CID preview + downloadable attachment), so the
+ * encoded payload is checked before any provider request is made.
  */
 export const MAX_RECIPIENTS_DEFAULT = 15;
 export const MAX_RECIPIENTS_HARD_LIMIT = 50;
@@ -22,10 +26,22 @@ export const MAILDROP_SENDER = {
   from: "MailDrop <no-reply@maildrops.online>",
 } as const;
 
-export const MAX_FILE_COUNT = 10;
-export const MAX_FILE_SIZE_BYTES = 4 * 1024 * 1024; // 4 MB per file
-export const MAX_TOTAL_ATTACHMENT_BYTES = 4 * 1024 * 1024; // 4 MB total
-export const MAX_REQUEST_BYTES = 4.4 * 1024 * 1024; // includes multipart overhead
+export const MAX_FILE_COUNT = 30;
+export const MAX_FILE_SIZE_BYTES = 15 * 1024 * 1024; // 15 MB per file
+export const MAX_TOTAL_ATTACHMENT_BYTES = 30 * 1024 * 1024; // 30 MB total
+export const MAX_REQUEST_BYTES = 4.4 * 1024 * 1024; // metadata-only request ceiling
+
+/** Temporary attachment blobs are removed after one hour if never sent. */
+export const BLOB_UPLOAD_TTL_MS = 60 * 60 * 1000;
+
+/** Resend's hard per-email limit, including Base64 attachment encoding. */
+export const RESEND_MAX_EMAIL_BYTES = 40 * 1024 * 1024;
+
+/**
+ * Keep a small margin below Resend's 40 MB ceiling for the HTML/text body and
+ * MIME metadata. The limit is applied to the encoded attachment payload.
+ */
+export const MAX_RESEND_ATTACHMENT_BYTES = 39 * 1024 * 1024;
 
 export const MAX_SUBJECT_LENGTH = 150;
 export const MAX_MESSAGE_LENGTH = 10_000;
@@ -140,3 +156,12 @@ export const RATE_LIMIT_SHORT_WINDOW = "10 m";
 export const RATE_LIMIT_SHORT_MAX = 4;
 export const RATE_LIMIT_LONG_WINDOW = "1 d";
 export const RATE_LIMIT_LONG_MAX = 20;
+
+/**
+ * Direct attachment uploads need a looser limiter than sends because one
+ * email can contain up to 30 files.
+ */
+export const UPLOAD_RATE_LIMIT_SHORT_WINDOW = "10 m";
+export const UPLOAD_RATE_LIMIT_SHORT_MAX = 120;
+export const UPLOAD_RATE_LIMIT_LONG_WINDOW = "1 d";
+export const UPLOAD_RATE_LIMIT_LONG_MAX = 600;

@@ -37,6 +37,16 @@ export function isImageFilename(filename: string): boolean {
   return getAttachmentSpec(filename)?.kind === "image";
 }
 
+/**
+ * Estimate the Base64-encoded attachment payload Resend receives. Images are
+ * counted twice because they are sent once with a CID for inline preview and
+ * once as a normal downloadable attachment.
+ */
+export function estimateAttachmentPayloadBytes(size: number, isImage: boolean): number {
+  const encoded = 4 * Math.ceil(Math.max(0, size) / 3);
+  return encoded * (isImage ? 2 : 1);
+}
+
 export function sanitizeFilename(filename: string): string {
   const base = filename
     .split(/[\\/]/)
