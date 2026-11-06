@@ -131,9 +131,8 @@ npm start
 1. Create a [Resend](https://resend.com) account.
 2. Create an API key with permission to send email.
 3. Set `RESEND_API_KEY` in `.env.local` or Vercel.
-4. Send only to the email address associated with that Resend account while the app uses `onboarding@resend.dev`.
-
-Resend's test sender is not a public production sender. To send to arbitrary recipients later, verify a domain you control in Resend, update the hardcoded sender in `lib/constants.ts`, and redeploy. Do not add a user-editable `From` address.
+4. Add `maildrops.online` as a sending domain in Resend and complete the required DNS verification records.
+5. Keep the sender fixed as `MailDrop <no-reply@maildrops.online>` in `lib/constants.ts`. Do not add a user-editable `From` address.
 
 The app does not connect to Gmail, Outlook, personal mailboxes, or personal SMTP credentials.
 
@@ -157,13 +156,13 @@ The daily quota reserves the actual recipient count atomically in Redis. A reque
 
 ## Deployment on Vercel
 
-The project is deployed at <https://mail-resender.vercel.app>.
+The project is deployed at <https://maildrops.online>.
 
 1. Import the repository into Vercel if it is not already connected.
 2. Add `RESEND_API_KEY`, `UPSTASH_REDIS_REST_URL`, and `UPSTASH_REDIS_REST_TOKEN` under **Project → Settings → Environment Variables** for Production (and Preview if needed).
-3. Set `NEXT_PUBLIC_APP_URL` to `https://mail-resender.vercel.app`.
+3. Set `NEXT_PUBLIC_APP_URL` to `https://maildrops.online`.
 4. Redeploy after changing environment variables. `NEXT_PUBLIC_*` values are embedded at build time.
-5. Confirm the API key belongs to the Resend account whose address will receive test emails.
+5. Confirm `maildrops.online` is verified in Resend and the API key belongs to the same Resend account.
 
 The API route uses the Node.js runtime (`export const runtime = "nodejs"`) and a 60-second maximum duration.
 
@@ -192,9 +191,9 @@ No Vercel Blob, S3, Firebase Storage, or other file-storage service is used. Att
 1. The browser validates text and recipients locally and builds a `multipart/form-data` request.
 2. `POST /api/send-email` checks the origin, content type, request size, Resend configuration, and rate limits.
 3. The server parses the form, validates it with Zod, normalizes and deduplicates recipients, and checks the recipient limit.
-4. Attachments are checked against the allowlist, size limits, and file signatures. Files remain in memory only for the request.
+4. Attachments are checked against the allowlist, size limits, and file signatures. Files remain in memory only for the request. Every file is sent as a Base64 MIME attachment. Images are sent twice: a CID part for the inline preview and a separate regular attachment for native download.
 5. The server atomically reserves the actual recipient count against the global daily quota and renders the selected template with escaped user content.
-6. Each recipient receives a separate Resend call with a per-recipient idempotency key. Concurrency is capped at 3.
+6. Each recipient receives a separate Resend call with the same attachments and a per-recipient idempotency key. Concurrency is capped at 3.
 7. The response returns per-recipient `accepted` or `failed` results. The UI distinguishes complete success, partial failure, and total failure, and offers retry for failed recipients only.
 
 ### API response shape
@@ -210,7 +209,7 @@ Successful submission (HTTP `200`), even when some recipients fail:
     {
       "recipient": "external@example.com",
       "status": "failed",
-      "error": "Resend is in test mode and only accepts the email address associated with the Resend account. Verify a custom sending domain before sending to external recipients."
+      "error": "The MailDrop sending domain is not verified in Resend. Verify the DNS records for maildrops.online in the Resend dashboard, then try again."
     }
   ],
   "summary": { "total": 2, "accepted": 1, "failed": 1 }
@@ -229,14 +228,14 @@ Validation or security failure (HTTP `400`, `403`, `413`, `415`, `429`, `500`, o
 }
 ```
 
-`accepted` means Resend accepted the email request. It does not guarantee inbox placement, and MailDrop does not claim otherwise. Resend test-mode rejections are reported as failures with a specific explanation.
+`accepted` means Resend accepted the email request. It does not guarantee inbox placement, and MailDrop does not claim otherwise. Provider rejections are reported as failures with a specific explanation.
 
 ---
 
 ## Security and privacy model
 
 - **Server-only secret.** `RESEND_API_KEY` is never sent to the browser.
-- **Fixed sender.** `MailDrop <onboarding@resend.dev>` is hardcoded in `lib/constants.ts`. User input cannot alter the `From` header.
+- **Fixed sender.** `MailDrop <no-reply@maildrops.online>` is hardcoded in `lib/constants.ts`. User input cannot alter the `From` header.
 - **No raw HTML.** The message is escaped first, then a small safe syntax (`**bold**`, `_italic_`, bullet/numbered lists, blank lines) is converted into the email HTML.
 - **No content logging.** Recipient addresses, subjects, message bodies, filenames, and attachment bytes are never written to logs. Only request IDs, hashed IPs, counts, statuses, durations, and coarse reasons are logged.
 - **Origin checks.** Cross-origin browser submissions are rejected. Requests without an `Origin` header are allowed; this is not an authentication mechanism.
@@ -275,8 +274,7 @@ Start the app and open `/`, `/compose`, `/privacy`, and `/terms`.
 Expected behavior without credentials:
 
 - Pages render.
-- The composer shows the Resend test-mode notice.
-- The sender card shows `MailDrop <onboarding@resend.dev>`.
+- The sender card shows `MailDrop <no-reply@maildrops.online>`.
 - The send button is disabled when `RESEND_API_KEY` is missing.
 - `POST /api/send-email` returns a safe `503 not_configured` after the origin and content-type checks.
 
@@ -300,22 +298,25 @@ Invoke-WebRequest -Method POST -Uri http://localhost:3000/api/send-email `
 ### End-to-end test with real credentials
 
 1. Set `RESEND_API_KEY` and Upstash credentials in `.env.local`.
-2. Restart `npm run dev`.
-3. Send to **the email address associated with the Resend account** — this is the only address Resend test mode accepts.
-4. Confirm the preview matches the received email and attachments open correctly.
-5. Add an external recipient and confirm the result screen reports Resend's test-mode rejection as a failure with the helpful explanation.
-6. Test a file with a disguised extension and confirm it is rejected.
-7. Submit twice rapidly and confirm only one submission is processed.
-8. Exceed the rate limit and confirm a `429` with a friendly retry message.
+2. Confirm `maildrops.online` is verified in Resend.
+3. Restart `npm run dev`.
+4. Send a controlled message to an address you control.
+5. Confirm the preview matches the received email and that PDFs/documents appear as native attachments.
+6. For an image, confirm it appears inline in the body and also appears as a separate downloadable attachment.
+7. Test a file with a disguised extension and confirm it is rejected.
+8. Submit twice rapidly and confirm only one submission is processed.
+9. Exceed the rate limit and confirm a `429` with a friendly retry message.
 
-For a production smoke test, repeat against <https://mail-resender.vercel.app> with the production environment variables.
+For a production smoke test, repeat against <https://maildrops.online> with the production environment variables.
 
 ---
 
-## Remaining limitation
+## Remaining production requirement
 
-Real delivery to arbitrary recipients requires verifying a custom sending domain in Resend and replacing the hardcoded test sender. Until then:
+The application sender is production-ready, but live delivery depends on Resend accepting `maildrops.online` as a verified sending domain. In Resend:
 
-- Only the email address associated with the Resend account can receive messages.
-- Other recipient addresses will be rejected by Resend.
-- The UI reports those rejections honestly and never shows false success.
+- Add the domain and publish the required DNS records (typically SPF, DKIM, and a return-path/MX record).
+- Wait for Resend to report the domain and its records as verified.
+- Keep `RESEND_API_KEY` scoped to the account that owns the verified domain.
+
+If verification is incomplete, Resend rejects the send and MailDrop reports the provider failure per recipient. It never falls back to another sender.
