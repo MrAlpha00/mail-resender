@@ -197,11 +197,31 @@ export async function POST(request: Request) {
     const payload = parsed.data;
     const recipients = [...new Set(payload.recipients)];
 
-    const files = form
+    const legacyFiles = form
       .getAll("attachments")
       .filter((entry): entry is File => entry instanceof File && entry.size > 0);
+    if (legacyFiles.length > 0) {
+      return jsonError(
+        "invalid_request",
+        "Please refresh MailDrop and upload your attachments again.",
+        400,
+        requestId,
+      );
+    }
 
-    if (files.length > MAX_FILE_COUNT) {
+    let attachmentsRaw: unknown = [];
+    try {
+      const raw = form.get("attachments");
+      attachmentsRaw = typeof raw === "string" && raw.length > 0 ? JSON.parse(raw) : [];
+    } catch {
+      return jsonError("invalid_request", "The attachment list is invalid.", 400, requestId);
+    }
+
+    if (!Array.isArray(attachmentsRaw)) {
+      return jsonError("invalid_request", "The attachment list is invalid.", 400, requestId);
+    }
+
+    if (attachmentsRaw.length > MAX_FILE_COUNT) {
       return jsonError(
         "invalid_request",
         `You can attach up to ${MAX_FILE_COUNT} files.`,
@@ -210,26 +230,179 @@ export async function POST(request: Request) {
       );
     }
 
-    const prepared = [];
+    const blobAttachments: UploadedAttachmentMeta[] = [];
+    for (const entry of attachmentsRaw) {
+      if (typeof entry !== "object" || entry === null) {
+        return jsonError("invalid_request", "The attachment list is invalid.", 400, requestId);
+      }
+      const record = entry as Record<string, unknown>;
+      const pathname = typeof record.pathname === "string" ? record.pathname : "";
+      const filename = typeof record.filename === "string" ? record.filename : "";
+      if (!pathname || !filename) {
+        return jsonError("invalid_request", "The attachment list is invalid.", 400, requestId);
+      }
+      blobAttachments.push({ pathname, filename });
+    }
+
+    const expectedPrefix = `maildrop/${payload.submissionId}/`;
+    for (const attachment of blobAttachments) {
+      const fileId = attachment.pathname.startsWith(expectedPrefix)
+        ? attachment.pathname.slice(expectedPrefix.length)
+        : "";
+      if (!UUID_PATTERN.test(fileId)) {
+        return jsonError(
+          "invalid_request",
+          "One of the attachments is invalid. Remove it and try again.",
+          400,
+          requestId,
+        );
+      }
+    }
+
+    if (new Set(blobAttachments.map((attachment) => attachment.pathname)).size !== blobAttachments.length) {
+      return jsonError("invalid_request", "The attachment list is invalid.", 400, requestId);
+    }
+
+    blobPathnames = blobAttachments.map((attachment) => attachment.pathname);
+
+    const prepared: PreparedAttachment[] = [];
     let totalAttachmentBytes = 0;
-    for (const file of files) {
-      try {
-        const attachment = await prepareAttachment(file);
-        totalAttachmentBytes += attachment.size;
+    let totalEncodedAttachmentBytes = 0;
+
+    if (blobAttachments.length > 0) {
+      if (!blobToken) {
+        return jsonError(
+          "not_configured",
+          "Attachment storage is not configured yet. Add BLOB_READ_WRITE_TOKEN and redeploy.",
+          503,
+          requestId,
+        );
+      }
+
+      const pending: PendingBlobAttachment[] = [];
+
+      for (const attachment of blobAttachments) {
+        let metadata;
+        try {
+          metadata = await head(attachment.pathname, { token: blobToken });
+        } catch {
+          return jsonError(
+            "invalid_request",
+            "One of the attachments is no longer available. Remove it and try again.",
+            400,
+            requestId,
+          );
+        }
+
+        if (Date.now() - metadata.uploadedAt.getTime() > BLOB_UPLOAD_TTL_MS) {
+          return jsonError(
+            "invalid_request",
+            "One of the attachments expired. Remove it and try again.",
+            400,
+            requestId,
+          );
+        }
+
+        const filename = sanitizeFilename(attachment.filename);
+        const validation = validateAttachment({
+          name: filename,
+          size: metadata.size,
+          type: metadata.contentType,
+        });
+
+        if (!validation.ok || !validation.spec || !validation.extension) {
+          return jsonError(
+            "invalid_request",
+            validation.error ?? "One of the attachments is not allowed.",
+            400,
+            requestId,
+          );
+        }
+
+        totalAttachmentBytes += metadata.size;
         if (totalAttachmentBytes > MAX_TOTAL_ATTACHMENT_BYTES) {
           return jsonError(
             "payload_too_large",
-            "The combined attachments exceed the allowed total size.",
+            `The combined attachments exceed the ${formatBytes(MAX_TOTAL_ATTACHMENT_BYTES)} limit.`,
             413,
             requestId,
           );
         }
-        prepared.push(attachment);
-      } catch (error) {
-        if (error instanceof AttachmentError) {
-          return jsonError("invalid_request", error.message, 400, requestId);
+
+        const isImage = validation.spec.kind === "image";
+        totalEncodedAttachmentBytes += estimateAttachmentPayloadBytes(metadata.size, isImage);
+        if (totalEncodedAttachmentBytes > MAX_RESEND_ATTACHMENT_BYTES) {
+          return jsonError(
+            "payload_too_large",
+            `The encoded email would exceed Resend's ${formatBytes(RESEND_MAX_EMAIL_BYTES)} limit. Images are included twice for inline preview, so remove a file or use a smaller one.`,
+            413,
+            requestId,
+          );
         }
-        return jsonError("invalid_request", "One of the attachments could not be processed.", 400, requestId);
+
+        pending.push({
+          pathname: attachment.pathname,
+          filename,
+          size: metadata.size,
+          contentType: validation.spec.mimes[0] ?? "application/octet-stream",
+          extension: validation.extension,
+          isImage,
+        });
+      }
+
+      for (const attachment of pending) {
+        let result;
+        try {
+          result = await get(attachment.pathname, {
+            access: "private",
+            token: blobToken,
+            useCache: false,
+          });
+        } catch {
+          return jsonError(
+            "invalid_request",
+            "One of the attachments could not be read. Remove it and try again.",
+            400,
+            requestId,
+          );
+        }
+
+        if (!result || result.statusCode !== 200) {
+          return jsonError(
+            "invalid_request",
+            "One of the attachments is no longer available. Remove it and try again.",
+            400,
+            requestId,
+          );
+        }
+
+        const bytes = new Uint8Array(await new Response(result.stream).arrayBuffer());
+        if (bytes.length !== attachment.size) {
+          return jsonError(
+            "invalid_request",
+            "One of the attachments could not be verified. Remove it and try again.",
+            400,
+            requestId,
+          );
+        }
+
+        if (!verifyFileSignature(bytes, attachment.extension)) {
+          return jsonError(
+            "invalid_request",
+            `“${attachment.filename}” does not match its file type. Please upload the original file.`,
+            400,
+            requestId,
+          );
+        }
+
+        prepared.push({
+          filename: attachment.filename,
+          size: bytes.length,
+          contentType: attachment.contentType,
+          extension: attachment.extension,
+          isImage: attachment.isImage,
+          bytes,
+        });
       }
     }
 
