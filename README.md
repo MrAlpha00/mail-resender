@@ -6,19 +6,19 @@ MailDrop lets a visitor write one message, add recipients, attach approved files
 
 ---
 
-## Current configuration: Resend test mode
+## Current configuration: production sender
 
-This deployment uses Resend's official onboarding sender:
+This deployment sends from the fixed address:
 
 ```text
-MailDrop <onboarding@resend.dev>
+MailDrop <no-reply@maildrops.online>
 ```
 
-The sender is hardcoded on the server. There is no sender-domain environment variable and no frontend control for the `From` address.
+The sender is hardcoded on the server. There is no sender-email environment variable and no frontend control for the `From` address.
 
-**Important limitation:** Resend test mode only accepts the email address associated with the Resend account. Every other recipient will be rejected by Resend until a custom sending domain is verified. The composer displays this limitation, and the results screen reports Resend's rejection honestly as a failure — it never claims delivery.
+**Requirement:** `maildrops.online` must be verified as a sending domain in Resend. If Resend reports that the domain or its DNS records are not verified, delivery fails honestly with a provider error; the app never falls back to a test sender.
 
-Cloudflare Turnstile is temporarily disabled. The old Turnstile helper remains in the repository for future reactivation, but it is not imported by the active send endpoint or composer, and no Cloudflare configuration is required.
+Cloudflare Turnstile remains disabled. The old Turnstile helper remains in the repository for future reactivation, but it is not imported by the active send endpoint or composer, and no Cloudflare configuration is required.
 
 ---
 

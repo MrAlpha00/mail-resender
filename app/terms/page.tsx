@@ -109,9 +109,10 @@ export default function TermsPage() {
 
       <h2 id="delivery">Delivery is not guaranteed</h2>
       <p>
-        This deployment currently uses Resend&apos;s test sender. Resend only accepts the email
-        address associated with the Resend account until a custom sending domain is verified.
-        Other recipients will be rejected; MailDrop reports those rejections as failures.
+        Messages are sent from a fixed MailDrop address on the sending domain configured by the
+        site operator. If the sending domain is not verified or its DNS records are incomplete,
+        the email provider may reject the request; MailDrop reports that failure instead of
+        claiming delivery.
       </p>
       <p>
         A successful submission means the email provider accepted the request for delivery. It
