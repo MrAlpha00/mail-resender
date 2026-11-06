@@ -21,7 +21,7 @@ export async function uploadAttachments(
   for (const attachment of attachments) {
     const file = attachment.file;
     const spec = getAttachmentSpec(file.name);
-    const contentType = spec?.mimes[0] ?? file.type || "application/octet-stream";
+    const contentType = spec?.mimes[0] || file.type || "application/octet-stream";
     const pathname = `maildrop/${submissionId}/${crypto.randomUUID()}`;
 
     const blob = await upload(pathname, file, {
