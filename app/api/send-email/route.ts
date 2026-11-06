@@ -45,6 +45,18 @@ export const maxDuration = 60;
 
 const CONCURRENCY_LIMIT = 3;
 
+const UUID_PATTERN =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+
+interface PendingBlobAttachment {
+  pathname: string;
+  filename: string;
+  size: number;
+  contentType: string;
+  extension: string;
+  isImage: boolean;
+}
+
 function jsonError(
   code: SendEmailErrorResponse["code"],
   message: string,
@@ -88,6 +100,8 @@ export async function POST(request: Request) {
   const requestId = crypto.randomUUID();
   const startedAt = Date.now();
   const ipHash = hashIp(getClientIp(request));
+  const blobToken = process.env.BLOB_READ_WRITE_TOKEN?.trim() ?? null;
+  let blobPathnames: string[] = [];
 
   try {
     if (!isSameOrigin(request)) {
