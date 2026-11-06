@@ -29,7 +29,7 @@ export default function TermsPage() {
       eyebrow="Acceptable use"
       title="A simple deal: send thoughtfully, send with consent."
       description="MailDrop is a personal-scale composition tool, not a bulk marketing platform or a public email relay. These rules keep the service safe for recipients, the sending domain, and everyone who relies on it."
-      updated="3 November 2026"
+      updated="6 November 2026"
       toc={toc}
     >
       <h2 id="agreement">Agreement</h2>

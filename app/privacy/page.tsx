@@ -42,10 +42,9 @@ export default function PrivacyPage() {
         address to use the composer.
       </p>
       <p>
-        This deployment currently uses Resend&apos;s test sender,
-        <strong> MailDrop &lt;onboarding@resend.dev&gt;</strong>. Resend test mode only permits
-        delivery to the email address associated with the Resend account until a custom sending
-        domain is verified.
+        This deployment sends from the fixed address
+        <strong> MailDrop &lt;no-reply@maildrops.online&gt;</strong>. The sender address is
+        configured on the server and cannot be changed by visitors in the browser.
       </p>
       <p>
         This notice describes the default behavior of the MailDrop application. The person or
